@@ -128,7 +128,7 @@ cache:
 before_install:
   - echo $TRAVIS_OS_NAME
   - |
-    if [ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_CPU_ARCH" == "amd64" ]; then
+    if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_CPU_ARCH" == "amd64" ]]; then
       free -m
       export PATH=/usr/lib/ccache:$PATH 
     fi
@@ -234,7 +234,7 @@ script:
     fi
   - |
     if [[ "$TRAVIS_CPU_ARCH" = "arm64" ]]; then
-      python -u runtests.py --parallel=4 | tee runtests.log
+      python -u runtests.py --parallel=5 | tee runtests.log
     else
       export SCIPY_AVAILABLE_MEM=3G
       python -u runtests.py -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX -n 3 2>&1 | tee runtests.log
