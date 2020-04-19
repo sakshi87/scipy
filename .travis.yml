@@ -41,9 +41,6 @@ matrix:
       env:
         - TESTMODE=fast
         - COVERAGE=
-        # Need a test with most recent Python version where we build from an
-        # sdist (uses pip build isolation), to check that the version we
-        # specify in pyproject.toml (will be older than --pre --upgrade) works
         - USE_SDIST=1
     - python: 3.7
       env:
@@ -190,7 +187,7 @@ before_install:
       conda install pip conda;
       conda update -n base conda;
       conda info -a;
-      conda install pytest pytest-xdist scipy mpmath Cython pybind11 coverage;
+      conda install pytest pytest-xdist scipy mpmath Cython pybind11;
     fi
 script:
   - python -c 'import numpy as np; print("relaxed strides checking:", np.ones((10,1),order="C").flags.f_contiguous)'
@@ -198,9 +195,11 @@ script:
   - if [ "$NPY_RELAXED_STRIDES_CHECKING" == "1" ]; then python -c'import numpy as np; assert np.ones((10,1),order="C").flags.f_contiguous'; fi
   # Test that mpmath actually uses gmpy2
   - |
-    if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_CPU_ARCH" != "arm64" ]]; then python -c 'import mpmath.libmp; assert mpmath.libmp.BACKEND == "gmpy"'; fi
+    if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_CPU_ARCH" != "arm64" ]]; then 
+      python -c 'import mpmath.libmp; assert mpmath.libmp.BACKEND == "gmpy"';
+    fi
   - |
-    if [ "${USE_WHEEL}" == "1" -a "${TRAVIS_CPU_ARCH}" != "arm64" ]; then
+    if [ "${USE_WHEEL}" == "1" ]; then
         # Run setup.py build before pip wheel, to build in current directory
         # and make more efficient use of ccache
         echo "setup.py build"
@@ -209,7 +208,7 @@ script:
         python tools/suppress_output.py pip wheel --no-build-isolation .
         pip install --no-cache-dir scipy*.whl
         USE_WHEEL_BUILD="--no-build"
-    elif [ "${USE_SDIST}" == "1" -a "${TRAVIS_CPU_ARCH}" != "arm64"  ]; then
+    elif [ "${USE_SDIST}" == "1" ]; then
         echo "setup.py sdist"
         python tools/suppress_output.py python setup.py sdist
         # Move out of source directory to avoid finding local scipy
@@ -224,8 +223,8 @@ script:
         USE_WHEEL_BUILD="--no-build"
     fi
   - |
-    if [[ "$TRAVIS_CPU_ARCH" = "arm64" ]]; then
-      python -u runtests.py --parallel=3 | tee runtests.log
+    if [[ "$TRAVIS_CPU_ARCH" == "arm64" ]]; then
+      python -u runtests.py --parallel=4 -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX 2>&1 | tee runtests.log
     else
       export SCIPY_AVAILABLE_MEM=3G
       python -u runtests.py -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX -n 3 2>&1 | tee runtests.log
