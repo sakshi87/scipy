@@ -42,6 +42,7 @@ matrix:
         - TESTMODE=fast
         - COVERAGE=
         - USE_SDIST=1
+        - PIP_NO_CACHE_DIR=off
     - python: 3.7
       env:
         - TESTMODE=fast
@@ -224,7 +225,7 @@ script:
     fi
   - |
     if [[ "$TRAVIS_CPU_ARCH" == "arm64" ]]; then
-      python -u runtests.py --parallel=4 -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX 2>&1 | tee runtests.log
+      python -u runtests.py --parallel=3 -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX 2>&1 | tee runtests.log
     else
       export SCIPY_AVAILABLE_MEM=3G
       python -u runtests.py -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX -n 3 2>&1 | tee runtests.log
