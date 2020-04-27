@@ -138,15 +138,10 @@ before_install:
   - python -V -V
   - python -c 'import sys; print("Python debug build:", hasattr(sys, "gettotalrefcount"))'
   - |
-    if [ "${TRAVIS_CPU_ARCH}" != "arm64" ]; then
-        travis_retry pip install --upgrade pip setuptools wheel
-        travis_retry pip install cython
-    fi
-  - |
     if [[ "$NUMPYSPEC" && "$TRAVIS_CPU_ARCH" != "arm64" ]]; then 
+         travis_retry pip install --upgrade pip setuptools wheel pytest pytest-xdist mpmath argparse Pillow codecov 
+         travis_retry pip install cython gmpy2 pybind11 
          travis_retry pip install $NUMPYSPEC
-         travis_retry pip install --upgrade pytest pytest-xdist mpmath argparse Pillow codecov
-         travis_retry pip install gmpy2 pybind11
     fi
   - |
     if [ -n "${USE_DEBUG}" ]; then
@@ -224,7 +219,7 @@ script:
     fi
   - |
     if [[ "$TRAVIS_CPU_ARCH" == "arm64" ]]; then
-      python -u runtests.py --parallel=3 -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX 2>&1 | tee runtests.log
+      python -u runtests.py --parallel=4 -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX 2>&1 | tee runtests.log
     else
       export SCIPY_AVAILABLE_MEM=3G
       python -u runtests.py -g -m $TESTMODE $COVERAGE $USE_WHEEL_BUILD -- -rfEX -n 3 2>&1 | tee runtests.log
